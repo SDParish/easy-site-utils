@@ -700,7 +700,7 @@ function sql_time($time, $stamp = null, &$error = null){
 	return $time;
 }
 
-function string_time($date, &$error = null, $date_usa = false){
+function string_time($date, &$error = null, $date_usa = false, $stamp_min = null, $stamp_max = null){
 	if (substr_count($date, '/')==1){
 		$date = '01/'.$date;
 	}
@@ -712,6 +712,20 @@ function string_time($date, &$error = null, $date_usa = false){
 	$stamp = strtotime($date);
 	if (empty($stamp)){
 		$error = 'The date entered wasn\'t recognised as a valid date. Try writing it in the format dd/mm/yyyy.';
+
+		return false;
+	}
+	// -2208988800 is 1900-01-01
+	$stamp_min = is_null($stamp_min) ? -2208988800 : $stamp_min;
+	if ($stamp<$stamp_min){
+		$error = 'The date entered was too far in the past';
+
+		return false;
+	}
+	// 4102444800 is 2100-01-01
+	$stamp_max = is_null($stamp_max) ? 4102444800 : $stamp_max;
+	if ($stamp>$stamp_max){
+		$error = 'The date entered was too far in the future';
 
 		return false;
 	}
