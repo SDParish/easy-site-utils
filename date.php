@@ -710,7 +710,7 @@ function string_time($date, &$error = null, $date_usa = false, $stamp_min = null
 		$date = preg_replace('/(?<![0-9])([0-9]{1,2})\/([0-9]{1,2})\//', '$2/$1/', $date);
 	}
 	$stamp = strtotime($date);
-	if (empty($stamp)){
+	if (false===$stamp){
 		$error = 'The date entered wasn\'t recognised as a valid date. Try writing it in the format dd/mm/yyyy.';
 
 		return false;
