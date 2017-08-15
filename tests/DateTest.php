@@ -305,4 +305,116 @@ class TestDates extends PHPUnit_Framework_TestCase {
 		$one_working_day = date_working_backward($date, 1);
 		$this->assertEquals('2016-07-01', $one_working_day);
 	}
+
+	// string_time
+
+	function testStringTimeFarFutureError(){
+		$date = '2116-07-01';
+		$error = '';
+		$result = string_time($date, $error);
+		$this->assertFalse($result);
+		$this->assertContains('too far', $error);
+		$this->assertContains('future', $error);
+	}
+
+	function testStringTimeNearFutureFine(){
+		$date = '2061-07-01';
+		$stamp = mktime(0,0,0,7,1,2061);
+		$error = '';
+		$result = string_time($date, $error);
+		$this->assertEquals($stamp, $result);
+		$this->assertEquals('', $error);
+	}
+
+	function testStringTimeFirstJan1970Fine(){
+		$date = '1970-01-01';
+		$stamp = mktime(0,0,0,1,1,1970);
+		$error = '';
+		$result = string_time($date, $error);
+		$this->assertEquals($stamp, $result);
+		$this->assertEquals('', $error);
+	}
+
+	function testStringTimeNearPastFine(){
+		$date = '1916-07-01';
+		$stamp = mktime(0,0,0,7,1,1916);
+		$error = '';
+		$result = string_time($date, $error);
+		$this->assertEquals($stamp, $result);
+		$this->assertEquals('', $error);
+	}
+
+	function testStringTimeFarPastError(){
+		$date = '1861-07-01';
+		$error = '';
+		$result = string_time($date, $error);
+		$this->assertFalse($result);
+		$this->assertContains('too far', $error);
+		$this->assertContains('past', $error);
+	}
+
+	function testStringTimeFarPastChangedLimitFine(){
+		$date = '1861-07-01';
+		$stamp = mktime(0,0,0,7,1,1861);
+		$min_stamp = mktime(0,0,0,1,1,1850);
+		$error = '';
+		$result = string_time($date, $error, false, $min_stamp);
+		$this->assertEquals($stamp, $result);
+		$this->assertEquals('', $error);
+	}
+
+	function testStringTimeInvalidRandomError(){
+		$date = 'hello';
+		$error = '';
+		$result = string_time($date, $error);
+		$this->assertFalse($result);
+		$this->assertContains('wasn\'t recognised', $error);
+	}
+
+	function testStringTimeInvalidBadFormatError(){
+		$date = '07/31/2016';
+		$error = '';
+		// $date_usa false by default
+		$result = string_time($date, $error);
+		$this->assertFalse($result);
+		$this->assertContains('wasn\'t recognised', $error);
+	}
+
+	function testStringTimeInvalidBadFormatUSAError(){
+		$date = '31/07/2016';
+		$error = '';
+		$result = string_time($date, $error, true);
+		$this->assertFalse($result);
+		$this->assertContains('wasn\'t recognised', $error);
+	}
+
+	function testStringTimeFormats(){
+		$stamp = mktime(0,0,0,7,31,2016);
+		$error = '';
+
+		$non_usa = [
+			'yyyy-mm-dd' => '2016-07-31',
+			'dd-mm-yyyy' => '31-07-2016',
+			'dd.mm.yyyy' => '31.07.2016',
+			'dd/mm/yyyy' => '31/07/2016',
+			'dd/mm/yy' => '31/07/16',
+		];
+		foreach ($non_usa as $format => $date) {
+			$result = string_time($date, $error);
+			$this->assertEquals($stamp, $result, 'Bad output for '.$format);
+			$this->assertEquals('', $error, 'Non-empty error for '.$format);
+		}
+
+		$usa = [
+			'mm-dd-yyyy' => '07-31-2016',
+			'mm.dd.yyyy' => '07.31.2016',
+			'mm/dd/yyyy' => '07/31/2016',
+			'mm/dd/yy' => '07/31/16',
+		];
+		foreach ($usa as $format => $date) {
+			$result = string_time($date, $error, true);
+			$this->assertEquals($stamp, $result, 'Bad output for '.$format);
+			$this->assertEquals('', $error, 'Non-empty error for '.$format);
+		}
+	}
 }
